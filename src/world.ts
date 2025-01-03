@@ -9,6 +9,8 @@ export class World extends Three.Group {
 	}
 
 	generate() {
+		this.clear(); // UI から再生成するので、Three.Group.clear()。
+
 		const maxCount = this.size.width ** 2 * this.size.height;
 		// InstancedMesh = geometry, material が同じで Transform だけが違う複数のメッシュを効率的にレンダリングする。 draw call を大幅に抑える
 		const mesh = new Three.InstancedMesh(geometry, material, maxCount);
