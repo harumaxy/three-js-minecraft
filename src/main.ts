@@ -1,6 +1,10 @@
 import * as Three from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { World } from "./world";
+import Stats from "three/examples/jsm/libs/stats.module.js";
+
+const stats = new Stats();
+document.body.append(stats.dom);
 
 const worldSize = 32;
 
@@ -48,6 +52,7 @@ function animate() {
 	// requestAnimationFrame(callback) = ブラウザにアニメーションを行うことを知らせる。アニメーション更新関数を渡して、次フレームに実行する。OneShot なので、毎フレーム呼び出す必要がある。ある意味再帰関数。
 	requestAnimationFrame(animate);
 	renderer.render(scene, camera);
+	stats.update();
 }
 
 window.addEventListener("resize", () => {
