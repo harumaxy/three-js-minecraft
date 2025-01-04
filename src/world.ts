@@ -4,7 +4,6 @@ import { RNG } from "./rng";
 import { blockIdMap, blocks, resources, type BlockType } from "./blocks";
 
 const geometry = new Three.BoxGeometry();
-const material = new Three.MeshLambertMaterial(); // 鏡面反射ハイライトが無く、光沢の無いマテリアル。物理ベースでない Lambertian モデルを反射率計算に使うので、光沢のない Raw stone/wood などに効果的。若干パフォーマンスが高い
 
 interface TerrainData {
 	id: BlockType["id"]; // Block type = 0: empty, 1: glass, 2: dirt ...
@@ -126,11 +125,21 @@ export class World extends Three.Group {
 
 	generateMeshes() {
 		this.clear(); // UI から再生成するので、Three.Group.clear()。
-
 		const maxCount = this.size.width ** 2 * this.size.height;
-		// InstancedMesh = geometry, material が同じで Transform だけが違う複数のメッシュを効率的にレンダリングする。 draw call を大幅に抑える
-		const mesh = new Three.InstancedMesh(geometry, material, maxCount);
-		mesh.count = 0;
+
+		const meshes = Object.fromEntries(
+			Object.values(blocks)
+				.filter((b) => b.id !== blocks.empty.id)
+				.map((b: BlockType) => {
+					// InstancedMesh = geometry, material が同じで Transform だけが違う複数のメッシュを効率的にレンダリングする。 draw call を大幅に抑える
+					console.log(b.material);
+
+					const mesh = new Three.InstancedMesh(geometry, b.material, maxCount);
+					mesh.name = b.name;
+					mesh.count = 0;
+					return [b.id, mesh];
+				}),
+		) as Record<number, Three.InstancedMesh>;
 
 		const matrix = new Three.Matrix4();
 		for (let x = 0; x < this.size.width; x++) {
@@ -138,19 +147,22 @@ export class World extends Three.Group {
 				for (let z = 0; z < this.size.width; z++) {
 					const blockId = this.getBlock(x, y, z)?.id;
 					const blockType = blockIdMap.get(blockId ?? -1);
+					if (blockId === blocks.empty.id || !blockType) continue;
+
+					const mesh = meshes[blockType.id ?? -1];
+
 					const instanceId = mesh.count;
 
-					if (blockId !== blocks.empty.id && !this.isBlockObscured(x, y, z)) {
+					if (!this.isBlockObscured(x, y, z)) {
 						matrix.setPosition(x + 0.5, y + 0.5, z + 0.5);
 						mesh.setMatrixAt(mesh.count++, matrix);
-						mesh.setColorAt(instanceId, new Three.Color(blockType?.color));
 						this.setBlockInstanceId(x, y, z, instanceId);
 					}
 				}
 			}
 		}
 
-		this.add(mesh);
+		this.add(...Object.values(meshes));
 	}
 
 	isBlockObscured(x: number, y: number, z: number): boolean {
