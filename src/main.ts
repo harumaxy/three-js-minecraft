@@ -3,6 +3,7 @@ import { OrbitControls } from "three/examples/jsm/Addons.js";
 import { World } from "./world";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { createUI } from "./ui";
+import { Player } from "./player";
 
 const stats = new Stats();
 document.body.append(stats.dom);
@@ -58,13 +59,22 @@ const world = new World();
 world.generate();
 scene.add(world);
 
-// Render loop
+// Player setup
+const player = new Player(scene);
 
+// Render loop
+let prevTime = performance.now();
 function animate() {
 	// requestAnimationFrame(callback) = ブラウザにアニメーションを行うことを知らせる。アニメーション更新関数を渡して、次フレームに実行する。OneShot なので、毎フレーム呼び出す必要がある。ある意味再帰関数。
 	requestAnimationFrame(animate);
-	renderer.render(scene, camera);
+	const currentTime = performance.now();
+	const delta = (performance.now() - prevTime) / 1000;
+
+	player.applyInput(delta);
+	renderer.render(scene, player.camera);
 	stats.update();
+
+	prevTime = currentTime;
 }
 
 window.addEventListener("resize", () => {
