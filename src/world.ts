@@ -1,7 +1,7 @@
 import * as Three from "three";
 import { SimplexNoise } from "three/examples/jsm/Addons.js";
 import { RNG } from "./rng";
-import { blockIdMap, blocks, type BlockType } from "./blocks";
+import { blockIdMap, blocks, resources, type BlockType } from "./blocks";
 
 const geometry = new Three.BoxGeometry();
 const material = new Three.MeshLambertMaterial(); // 鏡面反射ハイライトが無く、光沢の無いマテリアル。物理ベースでない Lambertian モデルを反射率計算に使うので、光沢のない Raw stone/wood などに効果的。若干パフォーマンスが高い
@@ -29,8 +29,10 @@ export class World extends Three.Group {
 	}
 
 	generate() {
+		const rng = new RNG(this.params.seed);
 		this.initializeTerrain();
-		this.generateTerrain();
+		this.generateResources(rng);
+		this.generateTerrain(rng);
 		this.generateMeshes();
 	}
 
@@ -45,8 +47,32 @@ export class World extends Three.Group {
 		);
 	}
 
-	generateTerrain() {
-		const simplex = new SimplexNoise(new RNG(this.params.seed));
+	/** coal, stone など、リソースを world に生成・配置する */
+	generateResources(rng: RNG) {
+		// 2d ノイズではなく 3d ノイズを使う
+		// noise2d(x, z) = y_height vs noise3d(x, y, z) = resource_exists
+
+		const simplex = new SimplexNoise(rng); // Simplex = Perlin noise(=勾配ノイズ)だが、高次元で計算オーバーヘッドが低い。任意のn次元で計算可能。
+		for (const r of resources) {
+			for (let x = 0; x < this.size.width; x++) {
+				for (let y = 0; y < this.size.height; y++) {
+					for (let z = 0; z < this.size.width; z++) {
+						const value = simplex.noise3d(
+							x / r.scale.x,
+							y / r.scale.y,
+							z / r.scale.z,
+						);
+						if (value > r.scarcity) {
+							this.setBlockId(x, y, z, r.id);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	generateTerrain(rng: RNG) {
+		const simplex = new SimplexNoise(rng);
 		const { magnitude, offset, scale } = this.params.terrain;
 		for (let x = 0; x < this.size.width; x++) {
 			for (let z = 0; z < this.size.width; z++) {
@@ -55,12 +81,13 @@ export class World extends Three.Group {
 				let height = Math.floor(this.size.height * scaledNoise); // ノイズ値を高さとする
 				height = Math.max(0, Math.min(height, this.size.height - 1));
 
-				for (let y = 0; y <= height; y++) {
-					if (y < height) {
+				for (let y = 0; y <= this.size.height; y++) {
+					const isEmpty = this.getBlock(x, y, z)?.id === blocks.empty.id;
+					if (y < height && isEmpty) {
 						this.setBlockId(x, y, z, blocks.dirt.id);
 					} else if (y === height) {
 						this.setBlockId(x, y, z, blocks.grass.id);
-					} else {
+					} else if (y > height) {
 						this.setBlockId(x, y, z, blocks.empty.id);
 					}
 				}
