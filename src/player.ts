@@ -7,9 +7,11 @@ export class Player {
 	// parameters
 	radius = 0.5;
 	height = 1.75;
+	jumpSpeed = 10;
+	maxSpeed = 10;
 
 	// state
-	maxSpeed = 10;
+	onGround = false;
 	input = new Three.Vector3();
 	velocity = new Three.Vector3();
 	#worldVelocity = new Three.Vector3();
@@ -100,7 +102,11 @@ export class Player {
 				this.camera.position.copy(startPosition);
 				this.camera.rotation.set(0, 0, 0);
 				this.velocity.set(0, 0, 0);
-
+				break;
+			case "Space":
+				if (this.onGround) {
+					this.velocity.y = this.jumpSpeed;
+				}
 				break;
 		}
 	}

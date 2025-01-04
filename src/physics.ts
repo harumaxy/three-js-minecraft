@@ -68,7 +68,6 @@ export class Physics {
 				max: Math.ceil(player.position.z + 2 * player.radius),
 			},
 		};
-		console.log({ extents });
 
 		const candidates = [];
 		for (let x = extents.x.min; x <= extents.x.max; x++) {
@@ -85,7 +84,6 @@ export class Physics {
 				}
 			}
 		}
-		console.log(`Broadphase Candidates: ${candidates.length}`);
 
 		return candidates;
 	}
@@ -121,6 +119,7 @@ export class Physics {
 				if (overlapY < overlapXZ) {
 					normal = new Three.Vector3(0, -Math.sign(dy), 0);
 					overlap = overlapY;
+					player.onGround = true;
 				} else {
 					normal = new Three.Vector3(-dx, 0, -dz).normalize();
 					overlap = overlapXZ;
@@ -129,7 +128,6 @@ export class Physics {
 				this.addContactPointHelper(closestPoint);
 			}
 		}
-		console.log(`Narrowphase Collisions: ${collisions.length}`);
 
 		return collisions;
 	}
