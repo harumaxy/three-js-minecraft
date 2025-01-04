@@ -4,6 +4,7 @@ import { World } from "./world";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { createUI } from "./ui";
 import { Player } from "./player";
+import { Physics } from "./physics";
 
 const stats = new Stats();
 document.body.append(stats.dom);
@@ -23,10 +24,10 @@ function getAspect() {
 }
 
 // Camera setup
-const camera = new Three.PerspectiveCamera(75, getAspect());
-camera.position.set(-worldSize, worldSize / 2, -worldSize);
-camera.lookAt(0, 0, 0);
-const controls = new OrbitControls(camera, renderer.domElement);
+const orbitCamera = new Three.PerspectiveCamera(75, getAspect());
+orbitCamera.position.set(-worldSize, worldSize / 2, -worldSize);
+orbitCamera.lookAt(0, 0, 0);
+const controls = new OrbitControls(orbitCamera, renderer.domElement);
 controls.target.set(worldSize / 2, 0, worldSize / 2);
 
 function setupLights() {
@@ -61,6 +62,7 @@ scene.add(world);
 
 // Player setup
 const player = new Player(scene);
+const physics = new Physics();
 
 // Render loop
 let prevTime = performance.now();
@@ -71,18 +73,24 @@ function animate() {
 	const delta = (performance.now() - prevTime) / 1000;
 
 	player.applyInput(delta);
-	renderer.render(scene, player.camera);
+	physics.update(delta, player, world);
+	renderer.render(
+		scene,
+		player.controls.isLocked ? player.camera : orbitCamera,
+	);
 	stats.update();
 
 	prevTime = currentTime;
 }
 
 window.addEventListener("resize", () => {
-	camera.aspect = getAspect();
-	camera.updateProjectionMatrix();
+	orbitCamera.aspect = getAspect();
+	orbitCamera.updateProjectionMatrix();
+	player.camera.aspect = getAspect();
+	player.camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-createUI(world);
+createUI(world, player);
 setupLights();
 animate();

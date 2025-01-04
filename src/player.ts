@@ -1,6 +1,8 @@
 import * as Three from "three";
 import { PointerLockControls } from "three/examples/jsm/Addons.js";
 
+const startPosition = new Three.Vector3(32, 16, 32);
+
 export class Player {
 	// state
 	maxSpeed = 10;
@@ -15,10 +17,12 @@ export class Player {
 		200,
 	);
 	controls = new PointerLockControls(this.camera, document.body);
+	cameraHelper = new Three.CameraHelper(this.camera);
 
 	constructor(scene: Three.Scene) {
-		this.camera.position.set(32, 16, 32);
+		this.camera.position.copy(startPosition);
 		scene.add(this.camera);
+		scene.add(this.cameraHelper);
 
 		document.addEventListener("keydown", this.onKeyDown.bind(this));
 		document.addEventListener("keyup", this.onKeyUp.bind(this));
@@ -42,6 +46,8 @@ export class Player {
 
 	onKeyDown(event: KeyboardEvent) {
 		if (!this.controls.isLocked) {
+			if (event.code === "ShiftLeft" || event.code === "ShiftRight") return;
+
 			this.controls.lock();
 			console.log("control locked");
 		}
@@ -58,6 +64,12 @@ export class Player {
 				break;
 			case "KeyD":
 				this.input.x = this.maxSpeed;
+				break;
+			case "KeyR":
+				this.camera.position.copy(startPosition);
+				this.camera.rotation.set(0, 0, 0);
+				this.velocity.set(0, 0, 0);
+
 				break;
 		}
 	}
