@@ -31,6 +31,9 @@ const contactGeometry = new Three.SphereGeometry(0.05, 6, 6);
 
 export class Physics {
 	helpers = new Three.Group();
+	simulationRate = 200;
+	timeStep = 1 / this.simulationRate;
+	accumulator = 0;
 	gravity = 32;
 
 	constructor(scene: Three.Scene) {
@@ -38,11 +41,19 @@ export class Physics {
 	}
 
 	update(delta: number, player: Player, world: World) {
-		this.helpers.clear();
-		player.velocity.y -= this.gravity * delta;
-		player.applyInput(delta);
-		player.updateBoundsHelper();
-		this.detectCollisions(player, world);
+		/** update 60FPS ぐらいに依存せず、1秒間あたりの simulationRate = 200 に従って物理をアップデートする
+		 * 1秒間に 200 回 = 1 フレームわたり 3 ~ 4 回の物理計算
+		 * 衝突検出などが正確になる (= すり抜けなくなる)
+		 */
+		this.accumulator += delta; // delta を accumulator として、timeStep 秒だけ減算していく
+		while (this.accumulator >= this.timeStep) {
+			this.helpers.clear();
+			player.velocity.y -= this.gravity * this.timeStep;
+			player.applyInput(this.timeStep);
+			player.updateBoundsHelper();
+			this.detectCollisions(player, world);
+			this.accumulator -= this.timeStep;
+		}
 	}
 
 	detectCollisions(player: Player, world: World) {
@@ -139,6 +150,9 @@ export class Physics {
 		});
 
 		for (const collision of collisions) {
+			if (!this.isPointInPlayerBoundingCylinder(collision.contactPoint, player))
+				continue; // 順番に衝突を解決するが、以前に解決した時点で次の衝突が解消されていたらスキップ
+
 			// 1. 重なった分だけ位置を戻す
 			const deltaPosition = collision.normal.clone();
 			deltaPosition.multiplyScalar(collision.overlap);
