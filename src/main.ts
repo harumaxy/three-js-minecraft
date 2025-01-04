@@ -62,7 +62,7 @@ scene.add(world);
 
 // Player setup
 const player = new Player(scene);
-const physics = new Physics();
+const physics = new Physics(scene);
 
 // Render loop
 let prevTime = performance.now();
@@ -72,7 +72,6 @@ function animate() {
 	const currentTime = performance.now();
 	const delta = (performance.now() - prevTime) / 1000;
 
-	player.applyInput(delta);
 	physics.update(delta, player, world);
 	renderer.render(
 		scene,
