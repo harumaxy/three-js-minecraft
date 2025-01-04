@@ -13,6 +13,8 @@ const renderer = new Three.WebGLRenderer();
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x80a0e0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = Three.PCFSoftShadowMap; // 影の見た目を決める。高品質なほど負荷が高い。一番軽いのは BasicShadowMap だが見た目がひどい。
 document.body.appendChild(renderer.domElement);
 
 function getAspect() {
@@ -27,13 +29,22 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(worldSize / 2, 0, worldSize / 2);
 
 function setupLights() {
-	const light1 = new Three.DirectionalLight();
-	light1.position.set(1, 1, 1);
-	scene.add(light1);
+	const sun = new Three.DirectionalLight();
+	sun.position.set(50, 50, 50);
+	sun.castShadow = true;
+	sun.shadow.camera.left = -50;
+	sun.shadow.camera.right = 50;
+	sun.shadow.camera.top = 50;
+	sun.shadow.camera.bottom = -50;
+	sun.shadow.camera.near = 0.1;
+	sun.shadow.camera.far = 100;
+	sun.shadow.bias = -0.0005; // ブロックの継ぎ目に影ができるのを防ぐ
+	sun.shadow.mapSize = new Three.Vector2(512, 512); // 影のテクスチャサイズ。高いほどくっきり
 
-	const light2 = new Three.DirectionalLight();
-	light2.position.set(-1, 1, -0.5);
-	scene.add(light2);
+	scene.add(sun);
+
+	const shadowHelper = new Three.CameraHelper(sun.shadow.camera);
+	scene.add(shadowHelper);
 
 	const ambient = new Three.AmbientLight();
 	ambient.intensity = 0.1;

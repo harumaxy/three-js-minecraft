@@ -132,11 +132,11 @@ export class World extends Three.Group {
 				.filter((b) => b.id !== blocks.empty.id)
 				.map((b: BlockType) => {
 					// InstancedMesh = geometry, material が同じで Transform だけが違う複数のメッシュを効率的にレンダリングする。 draw call を大幅に抑える
-					console.log(b.material);
-
 					const mesh = new Three.InstancedMesh(geometry, b.material, maxCount);
 					mesh.name = b.name;
 					mesh.count = 0;
+					mesh.castShadow = true;
+					mesh.receiveShadow = true;
 					return [b.id, mesh];
 				}),
 		) as Record<number, Three.InstancedMesh>;
