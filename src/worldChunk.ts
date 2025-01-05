@@ -14,16 +14,17 @@ export class WorldChunk extends Three.Group {
 	// 後からブロックを掘る(削除する)ために、インスタンスid を保持する
 	public data: TerrainData[][][] = [];
 
-	params = {
-		seed: 0,
-		terrain: {
-			scale: 30,
-			magnitude: 0.5,
-			offset: 0.2,
+	constructor(
+		public size = { width: 64, height: 32 },
+		public params = {
+			seed: 0,
+			terrain: {
+				scale: 30,
+				magnitude: 0.5,
+				offset: 0.2,
+			},
 		},
-	};
-
-	constructor(public size = { width: 64, height: 32 }) {
+	) {
 		super();
 	}
 
@@ -57,9 +58,9 @@ export class WorldChunk extends Three.Group {
 				for (let y = 0; y < this.size.height; y++) {
 					for (let z = 0; z < this.size.width; z++) {
 						const value = simplex.noise3d(
-							x / r.scale.x,
-							y / r.scale.y,
-							z / r.scale.z,
+							(this.position.x + x) / r.scale.x,
+							(this.position.y + y) / r.scale.y,
+							(this.position.z + z) / r.scale.z,
 						);
 						if (value > r.scarcity) {
 							this.setBlockId(x, y, z, r.id);
@@ -75,7 +76,10 @@ export class WorldChunk extends Three.Group {
 		const { magnitude, offset, scale } = this.params.terrain;
 		for (let x = 0; x < this.size.width; x++) {
 			for (let z = 0; z < this.size.width; z++) {
-				const value = simplex.noise(x / scale, z / scale); // xz 座標でノイズ値を取得
+				const value = simplex.noise(
+					(this.position.x + x) / scale,
+					(this.position.z + z) / scale,
+				); // xz 座標でノイズ値を取得
 				const scaledNoise = offset + magnitude * value; // magnitude/offset でノイズ値の振幅を調整
 				let height = Math.floor(this.size.height * scaledNoise); // ノイズ値を高さとする
 				height = Math.max(0, Math.min(height, this.size.height - 1));
@@ -181,5 +185,13 @@ export class WorldChunk extends Three.Group {
 			.some((id) => id === blocks.empty.id);
 
 		return !hasEmptyNeighbor;
+	}
+
+	disposeInstances() {
+		this.traverse((obj) => {
+			//@ts-ignore
+			if (obj.dispose) obj.dispose();
+		});
+		this.clear();
 	}
 }

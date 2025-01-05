@@ -1,7 +1,7 @@
 import * as Three from "three";
 import { blocks } from "./blocks";
 import type { Player } from "./player";
-import type { WorldChunk } from "./worldChunk";
+import type { World } from "./world";
 
 const collisionMaterial = new Three.MeshBasicMaterial({
 	color: 0xff0000,
@@ -40,7 +40,7 @@ export class Physics {
 		scene.add(this.helpers);
 	}
 
-	update(delta: number, player: Player, world: WorldChunk) {
+	update(delta: number, player: Player, world: World) {
 		/** update 60FPS ぐらいに依存せず、1秒間あたりの simulationRate = 200 に従って物理をアップデートする
 		 * 1秒間に 200 回 = 1 フレームわたり 3 ~ 4 回の物理計算
 		 * 衝突検出などが正確になる (= すり抜けなくなる)
@@ -56,7 +56,7 @@ export class Physics {
 		}
 	}
 
-	detectCollisions(player: Player, world: WorldChunk) {
+	detectCollisions(player: Player, world: World) {
 		const candidates = this.broadPhase(player, world);
 		const collisions = this.narrowPhase(candidates, player);
 		if (collisions.length > 0) {
@@ -64,7 +64,7 @@ export class Physics {
 		}
 	}
 
-	broadPhase(player: Player, world: WorldChunk) {
+	broadPhase(player: Player, world: World) {
 		const extents = {
 			x: {
 				min: Math.floor(player.position.x),

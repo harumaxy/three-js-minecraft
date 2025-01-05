@@ -1,14 +1,15 @@
 import GUI from "three/examples/jsm/libs/lil-gui.module.min.js";
-import type { WorldChunk } from "./worldChunk";
+
 import { resources } from "./blocks";
 import type { Player } from "./player";
+import type { World } from "./world";
 
 // lil gui = Three.js に同梱される GUI フレームワーク。おおよそすべてのUIが作れる
 
-export function createUI(world: WorldChunk, player: Player) {
+export function createUI(world: World, player: Player) {
 	const gui = new GUI();
-	gui.add(world.size, "width", 8, 128, 1).name("Width"); // 操作したいプロパティを持つオブジェクトを渡す。 obj, property_name, min, max [, step], Label
-	gui.add(world.size, "height", 8, 64, 1).name("Height");
+	gui.add(world.chunkSize, "width", 8, 128, 1).name("Width"); // 操作したいプロパティを持つオブジェクトを渡す。 obj, property_name, min, max [, step], Label
+	gui.add(world.chunkSize, "height", 8, 64, 1).name("Height");
 
 	const playerFolder = gui.addFolder("Player");
 	playerFolder.add(player, "maxSpeed", 1, 20).name("Max Speed");
