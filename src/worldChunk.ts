@@ -10,7 +10,7 @@ interface TerrainData {
 	instanceId: number | null;
 }
 
-export class World extends Three.Group {
+export class WorldChunk extends Three.Group {
 	// 後からブロックを掘る(削除する)ために、インスタンスid を保持する
 	public data: TerrainData[][][] = [];
 

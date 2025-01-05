@@ -1,6 +1,6 @@
 import * as Three from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
-import { World } from "./world";
+import { WorldChunk } from "./worldChunk";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { createUI } from "./ui";
 import { Player } from "./player";
@@ -56,7 +56,7 @@ function setupLights() {
 // Scene setup
 
 const scene = new Three.Scene();
-const world = new World();
+const world = new WorldChunk();
 world.generate();
 scene.add(world);
 
